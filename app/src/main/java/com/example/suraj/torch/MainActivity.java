@@ -1,45 +1,38 @@
 package com.example.suraj.torch;
 
-import android.app.ActivityManager;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.os.Build;
-import android.support.design.widget.CoordinatorLayout;
+import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 
-import java.util.Iterator;
-import java.util.List;
-
 public class MainActivity extends AppCompatActivity {
 
-    ImageButton imageButton;
-    FloatingActionButton fab;
-    SeekBar seekBar;
-    AlertDialog alertDialog;
+    private ImageButton imageButton;
+    private FloatingActionButton fab;
+    private SeekBar seekBar;
+    private AlertDialog alertDialog;
 
-    SharedPreferences preferences;
+    private SharedPreferences preferences;
 
-    Boolean api23;
-    Boolean torch = false;
+    private Boolean api23;
+    private Boolean torch = false;
 
-    int seekBarValue = 1;
-    Intent intent = null;
-    public static final String TAG = "Service";
+    private int seekBarValue = 1;
+    private Intent intent = null;
+    private static final String TAG = "Service";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
                     decideVersion();
                     Snackbar snackbar = Snackbar.make(view,"Flash On",Snackbar.LENGTH_SHORT);
                     snackbar.show();
+                    imageButton.setImageResource(R.drawable.ic_flash_on_black_48dp);
 
                 }else{
                     if(MyIntentService.thread!=null) {
@@ -103,26 +97,21 @@ public class MainActivity extends AppCompatActivity {
 
                         Snackbar snackbar = Snackbar.make(view,"Flash Off",Snackbar.LENGTH_SHORT);
                         snackbar.show();
+                        imageButton.setImageResource(R.drawable.ic_flash_off_black_48dp);
                     }
                 }
                 torch=!torch;
+                if(!torch)
+                    imageButton.setImageResource(R.drawable.ic_flash_off_black_48dp);
 
                 }
         });
-
-
 
     }
 
 
     @Override
     protected void onStop() {
-
-//        Log.d(TAG, "onStop: ");
-//        Bundle bundle = new Bundle();
-//        bundle.putInt("SEEK_BAR",seekBarValue);
-//        bundle.putBoolean("TORCH",torch);
-//        getIntent().putExtras(bundle);
 
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("TORCH",torch);
@@ -143,24 +132,23 @@ public class MainActivity extends AppCompatActivity {
         seekBarValue = preferences.getInt("SEEK_BAR",1);
 
         seekBar.setProgress(seekBarValue);
-      //  seekBar.setMin(1);
-//        Log.d(TAG, "onResume: ");
-//        Bundle bundle = getIntent().getExtras();
-//        if(bundle!=null) {
-//            torch = bundle.getBoolean("TORCH");
-//            seekBarValue = bundle.getInt("SEEK_BAR");
-//        }
+
+        if(torch)
+            imageButton.setImageResource(R.drawable.ic_flash_on_black_48dp);
+        else
+            imageButton.setImageResource(R.drawable.ic_flash_off_black_48dp);
+
         Log.d(TAG, "onResume: ");
     }
 
-    public void newApiFlash(){
+    private void newApiFlash(){
 
         CameraManager cameraManager = getApplicationContext().getSystemService(CameraManager.class);
         CameraCharacteristics cameraCharacteristics = null;
 
         Log.d(TAG, "newApiFlash: ");
 
-            String[] cameraList = new String[0];
+            String[] cameraList;
             String backCameraId = null;
 
             Log.d(TAG, "newApiFlash: inside false");
@@ -168,6 +156,7 @@ public class MainActivity extends AppCompatActivity {
                 cameraList = cameraManager.getCameraIdList();
                 for(String id : cameraList){
                     cameraCharacteristics = cameraManager.getCameraCharacteristics(id);
+                    //noinspection ConstantConditions
                     if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK){
                         backCameraId = id;
                         Log.d(TAG, "newApiFlash: got Id");
@@ -197,8 +186,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    public void oldApiFlash(){
-
+    private void oldApiFlash(){
 
             torch = !torch;
             if(getApplicationContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)){
@@ -211,13 +199,10 @@ public class MainActivity extends AppCompatActivity {
             }else{
                 showErrorDiaolg();
             }
-
-
         }
 
 
-
-    public void showErrorDiaolg(){
+    private void showErrorDiaolg(){
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle("Error");
         builder.setMessage("Device does not have Flash");
@@ -231,37 +216,11 @@ public class MainActivity extends AppCompatActivity {
         alertDialog = builder.create();
         finish();
     }
-//
-//    private void isTorchOn(){
-//        Log.d(TAG, "isTorchOn: ");
-//        ActivityManager activityManager = (ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
-//
-//        List<ActivityManager.RunningAppProcessInfo> runningAppProcesses = activityManager.getRunningAppProcesses();
-//        Iterator<ActivityManager.RunningAppProcessInfo> iterator = runningAppProcesses.iterator();
-//
-//        while (iterator.hasNext()){
-//            Log.d(TAG, "isTorchOn: ");
-//            ActivityManager.RunningAppProcessInfo info = iterator.next();
-//            Log.d(TAG, "isTorchOn: "+info.processName);
-//            String serviceName = getPackageName();
-//            if(info.processName.equals(serviceName)){
-//                torch = true;
-//                Log.d(TAG, "isTorchOn: " +torch);
-//                Log.d(TAG, "isTorchOn: "+info.processName);
-//                break;
-//            }
-//        }
-//    }
-
-    public void decideVersion(){
-
-      //  torch = isTorchOn();
 
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            api23 = true;
-        } else
-            api23 = false;
+    private void decideVersion(){
+
+        api23 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
 
 
         if (api23) {

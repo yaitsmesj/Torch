@@ -17,14 +17,14 @@ import android.util.Log;
 public class MyIntentService extends IntentService {
 
 
-    Boolean api23;
-    CameraManager cameraManager;
-    String cameraId;
-    Camera camera;
+    private Boolean api23;
+    private CameraManager cameraManager;
+    private String cameraId;
+    private Camera camera;
     static int seekBarValue;
     static boolean finish = false;
     static Thread thread;
-    public static final String TAG = "Service";
+    private static final String TAG = "Service";
 
     public MyIntentService() {
         super("MyIntentService");
@@ -75,7 +75,28 @@ public class MyIntentService extends IntentService {
             Camera.Parameters parameters = camera.getParameters();
             parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
             camera.setParameters(parameters);
-            camera.startPreview();
+
+            seekBarValue = intent.getIntExtra("VALUE",1);
+            boolean value = true;
+            while(!finish){
+
+                thread = Thread.currentThread();
+
+                if(value)
+                    camera.startPreview();
+                else
+                    camera.stopPreview();
+
+                value = !value;
+                try {
+                    Log.d(TAG, "onHandleIntent: "+value+" "+seekBarValue);
+                    Thread.sleep(seekBarValue*100);
+                } catch (InterruptedException e) {
+                    //e.printStackTrace();
+                }
+
+            }
+            finish=false;
 
         }
 
